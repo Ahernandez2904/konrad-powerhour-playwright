@@ -1,19 +1,33 @@
-// @ts-check
 const { test, expect } = require('@playwright/test');
+const { PlaywrightHomePage } = require('../pages/playwrightHomePage');
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+import searchData from "../data/data.json";
 
-  // Expect a title "to contain" a substring.
+let homePage;
+
+test.beforeEach(async ({ page }) => {
+  homePage = new PlaywrightHomePage(page);
+  await homePage.goto();
+});
+
+test.afterEach(async ({ page }, testInfo) => {
+  console.log(`Test "${testInfo.title}" finished with status: ${testInfo.status}`);
+});
+
+// Regular test
+test('check page title contains Playwright', async ({ page }) => {
   await expect(page).toHaveTitle(/Playwright/);
 });
 
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-
-  // Click the get started link.
-  await page.getByRole('link', { name: 'Get started' }).click();
-
-  // Expects page to have a heading with the name of Installation.
-  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+// Using page object model
+test('navigate to getting started guide', async ({ page }) => {
+  await homePage.navigateToGettingStarted();
+  await expect(page).toHaveURL(/.*intro/);
 });
+
+// Using data from JSON
+test('check search functionality', async ({ page }) => {
+  await homePage.searchFor(searchData["value"]);
+  await expect(page).toHaveURL(new RegExp(`.*${searchData.result}`));
+});
+
